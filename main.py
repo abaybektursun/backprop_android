@@ -64,16 +64,48 @@ def backprop(net,y):
                                df_dh(unit['out'])
 
 
-def update_weight:
-    pass
+def update_weights(net, row, l_rate):
+    for i in range(len(net)):
+        inputs = row[:-1]
+        if i != 0:
+            inputs=[unit['out'] for unit in net[i-1]]
+        for unit in net[i]:
+            for j in range(len(inputs)):
+                unit['weights'][j] += l_rate * \
+                unit['gradient'] * inputs[j]
+            unit['weights'][-1] += l_rate * \
+            unit['gradient']
+
+def train(net,data,l_rate,n_epoch,n_out):
+    for epoch in range(n_epoch):
+        sum_err = 0
+        for row in data:
+            outs   = forward_prop(net,row)
+            expect = [0 for i in range(n_out)]
+            expect[row[-1]] = 1
+            sum_err += sum([(expect[i]-outs[i])**2 for i in range(len(expect))])
+            backprop(net,expect)
+            update_weights(net,row,l_rate)
+        print('Epoch:{}, Loss: {}'.format(epoch, sum_err))
+
+
+
 #-----------------------------------------------------
+
 seed(1)
-
-net = [[{'out': 0.7105668883115941, 'weights': [0.13436424411240122, 0.8474337369372327, 0.763774618976614]}],[{'out': 0.6213859615555266, 'weights': [0.2550690257394217, 0.49543508709194095]}, {'out': 0.6573693455986976, 'weights': [0.4494910647887381, 0.651592972722763]}]]
-
-y = [0,1]
-backprop(net,y)
-
-for h in net:
-    print(h)
-
+dataset = [[2.7810836,2.550537003,0],
+	[1.465489372,2.362125076,0],
+	[3.396561688,4.400293529,0],
+	[1.38807019,1.850220317,0],
+	[3.06407232,3.005305973,0],
+	[7.627531214,2.759262235,1],
+	[5.332441248,2.088626775,1],
+	[6.922596716,1.77106367,1],
+	[8.675418651,-0.242068655,1],
+	[7.673756466,3.508563011,1]]
+n_inputs = len(dataset[0]) - 1
+n_outputs = len(set([row[-1] for row in dataset]))
+network = init_network(n_inputs, 2, n_outputs)
+train(network, dataset, 0.5, 20, n_outputs)
+for layer in network:
+	print(layer)
